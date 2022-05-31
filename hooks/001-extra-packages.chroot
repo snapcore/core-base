@@ -40,6 +40,41 @@ Ht/skh2wZSHtJgejt9kqIKMho1wtYz7ZTqMtN9GJK0VONbHP0Xu6
 
 EOF
 
+# XXX test PPA
+echo "deb http://ppa.launchpad.net/alfonsosanchezbeato/build2/ubuntu $CODENAME main" > /etc/apt/sources.list.d/test-ppa.list
+cat >/etc/apt/trusted.gpg.d/test-ppa.asc <<'EOF'
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Comment: Hostname: 
+Version: Hockeypuck ~unreleased
+
+xsFNBFOMcNUBEADbiHU0M4t7BhWOtUZkksxU1PL5skUj2QT+gooHx9txcwQU4seM
+dI7f5vRWEi9msiH/tt/YZ25A+AAT99u3NuX9irkmTIsxEJXhp/uCNZ1HnyFjCzpB
+85YLbqTYbLKQL/nfqYc/SL0hzgdPDDYprVQg6+eQ5EyEEiyQItjCTB9xBPTHO6eL
+GeL7jIXZuDlYdrawuqoWwdTiIi2ElQ7SZmVLGfbyuBmpUn5LcR1SlKNfHTXZFD6D
+HxpLG3aP9bHvYjsVT+kLIlo1ft32c1FocIPFIglqNoZhj1iXFOuvwn/N0dEKcW6q
+3+4847NRIefO5QoL0GkSFAWxf0ggHuErrj3Dh4Go5etaW6kc+lca49U69AdYRQ1i
+EN1vXD4drkGhuXnVqMGgVSx7l/4F3HxAeFM5H6B+fRnh4e+6J1hvExBF1I711KhT
+c9i2zdLm99sCe4Lowmt+ctkbUiOMBG4cojLO0laeyoazvyqqYQxZvt6XeWEJfj3Y
+3ALF09SPRRRyS7CeiMjSNPsdgQ/Li8vMWMWRKqN19WuuhtDeg3MlzcezqjBdBMt2
+otnLrKYtg3t0w2hTzZJJDyuSgor5ZL+X4nEpofEWjxXV2oGLyNXcmzXzBeg0NYTJ
+/iQPlCLGmedWD/S02lSId8X9ZzDug+B4EHz9T+te4RNiblOvD/TL+SaG4QARAQAB
+zSdMYXVuY2hwYWQgUFBBIGZvciBBbGZvbnNvIFNhbmNoZXotQmVhdG/CwXgEEwEC
+ACIFAlOMcNUCGwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAAoJEGD8KGWjmjKy
+eEQQAITSX/QvHcmhDBG1wolELmCsSnfoOZD/fq+OQhSA4z1LzmwgxR6E/GOtqxPn
+s9Qe0ODmUvXQPSuAVWWd7OT/le9IGkDlJ4z992TD6pBEpapacvoYDnVmhb0xrMR7
+Dyos0zaIICqNRFDzwiKNxviZ0djnlTQeO9cWOWbxU+PGLmq5srPWM2PEg3H5bwEv
+nXs8jd/5sSmbaMauTJYhxL26xLLNdYHGJxIAD+rS9idQ70L7skaycODIXQONhBPe
+BAvwWOxYqhVN/qqbl9vZxdz9LBklg+5YSvTKjsnk1x7N3oj9JkTx9OSLKqzRIQSJ
+TWxn6iL51Ae8JPXAqV+YYUR30EQZWTH/AKfvLOvjMeYB6fRQ9DOLdHraiLFSxodP
+Dtp7h5Sj0Kn+LNWWVCwiPrYy+gYMx217NbnaiX2pSXo/Mygf+xKFETg8d/99MybQ
+uksUHbZnaXU0aR2UMAM0JtjF9JhcM5VmkgYPhu87PratnETABAYw5EY5luLPaYI0
+Y8Ypgjf8WET4xmFaLMQm2/HiWiropsbxa2XqIHcYdcEG8IRML3w+BIE7Ldrm+kxe
+bOmlo1ozN/el2ASctjg5E8CPnnMmp3ZSeF1yxyHvUh5T5ja56EqaO+XlEMSYGI+m
+r0VbzE2sd7sA6Co1QrBiM2Ccelsp6NSU18ws2PhqapSyUTa6
+=G8Dk
+-----END PGP PUBLIC KEY BLOCK-----
+EOF
+
 # install some packages we need
 apt update
 apt dist-upgrade -y
@@ -76,7 +111,14 @@ apt install --no-install-recommends -y \
     cloud-init \
     dmsetup \
     cryptsetup \
-    bzip2
+    bzip2 \
+    plymouth-label-ft \
+    fonts-ubuntu
+
+# Leave only the font used by ubuntu-core theme
+rm -rf /usr/share/fonts/truetype/dejavu/
+mv /usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf /usr/share/fonts/Plymouth.ttf
+rm -rf /usr/share/fonts/truetype/ubuntu/
 
 case "$(dpkg --print-architecture)" in
     riscv64)
