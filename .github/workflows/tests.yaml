@@ -23,13 +23,29 @@ jobs:
 
       - name: Build snap
         run: |
-          spread -artifacts=./artifacts google-nested:tests/spread/build/
+          spread -artifacts=./artifacts google-nested:tests/spread/build/build-snap
           find ./artifacts -type f -name "*.artifact" -exec cp {} "${{ github.workspace }}" \;
-      
+
       - uses: actions/upload-artifact@v2
         with:
           name: core-snap
           path: "${{ github.workspace }}/core22.artifact"
+
+      - uses: actions/checkout@v3
+        with:
+          repository: 'valentindavid/core-initrd'
+          ref: dbdf3be73961c83828b801bb2bd48c21a865f3d6
+          path: core-initrd
+
+      - name: Build core-initrd
+        run: |
+          spread -artifacts=./artifacts-initrd google-nested:tests/spread/build/build-initrd
+          find artifacts-initrd -name pc-kernel.snap -exec mv {} . ";"
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: core-initrd
+          path: "${{ github.workspace }}/pc-kernel.snap"
 
       - name: Discard spread workers
         if: always()
@@ -78,14 +94,19 @@ jobs:
       - uses: actions/checkout@v2
         with:
           path: core-base
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           repository: 'snapcore/snapd'
           path: snapd
+          ref: 4f88cb8d5798723b135b607e533ba59b6f878a68
       - uses: actions/download-artifact@v2
         with:
           name: core-snap
       
+      - uses: actions/download-artifact@v2
+        with:
+          name: core-initrd
+
       - name: Install spread
         run: curl -s https://storage.googleapis.com/snapd-spread-tests/spread/spread-amd64.tar.gz | sudo tar xzv -C /usr/bin
 
@@ -94,11 +115,11 @@ jobs:
         run: |
           . "core-base/tests/lib/prepare-utils.sh"
 
-          echo "************* INSTALLING DEPS *************"
-          install_core22_deps
-
           echo "************* DOWNLOADING SNAPS *************"
           download_core22_snaps 'edge'
+
+          echo "************* INSTALLING DEPS *************"
+          install_core22_deps
 
           echo "************* WRITING CLOUD-INIT CONFIG *************"
           prepare_core22_cloudinit
@@ -114,7 +135,7 @@ jobs:
           cd snapd
           
           # add any test suites that should be tested here
-          SPREAD_EXTERNAL_ADDRESS=localhost:8022 spread external:ubuntu-core-22-64:tests/smoke/
+          SPREAD_EXTERNAL_ADDRESS=localhost:8022 spread external:ubuntu-core-22-64:tests/smoke/ external:ubuntu-core-22-64:tests/core/
 
       - name: Discard spread workers
         if: always()
