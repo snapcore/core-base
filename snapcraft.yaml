@@ -66,6 +66,12 @@ parts:
     stage:
       - -console-conf_*.deb
       - -subiquitycore_*.deb
+  splash-theme:
+    plugin: dump
+    source: https://github.com/alfonsosanchezbeato/plymouth-theme-ubuntu-core.git
+    source-type: git
+    organize:
+      ubuntu-core: usr/share/plymouth/themes/ubuntu-core
   bootstrap:
     after:
       - consoleconf-deb

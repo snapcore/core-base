@@ -1,0 +1,141 @@
+#! /bin/sh -ex
+
+# Rewrite units for plymouth
+cat << 'EOF' > /lib/systemd/system/plymouth-start.service
+[Unit]
+Description=Show Plymouth Boot Screen
+DefaultDependencies=no
+Wants=systemd-ask-password-plymouth.path systemd-vconsole-setup.service
+After=systemd-vconsole-setup.service systemd-udev-trigger.service systemd-udevd.service
+After=snap-initramfs-mounts.service
+Before=systemd-ask-password-plymouth.service
+ConditionKernelCommandLine=!plymouth.enable=0
+ConditionKernelCommandLine=!nosplash
+ConditionKernelCommandLine=splash
+ConditionVirtualization=!container
+IgnoreOnIsolate=true
+Requires=plymouth-quit.service splash-client.service
+Requires=plymouth-show-run.service plymouth-show-install.service
+Requires=plymouth-show-recover.service plymouth-show-factory-reset.service
+
+[Service]
+ExecStart=/sbin/plymouthd --debug --mode=boot --pid-file=/run/plymouth/pid --attach-to-session --ignore-serial-consoles
+ExecStartPost=-/bin/plymouth show-splash
+Type=forking
+RemainAfterExit=yes
+KillMode=mixed
+SendSIGKILL=no
+EOF
+
+cat << 'EOF' > /lib/systemd/system/plymouth-quit.service
+[Unit]
+Description=Terminate Plymouth Boot Screen
+After=plymouth-start.service snapd.seeded.service
+ConditionKernelCommandLine=snapd_recovery_mode=run
+
+[Service]
+ExecStart=-/bin/plymouth quit
+ExecStartPost=-systemctl stop splash-client.service
+Type=oneshot
+TimeoutSec=20
+EOF
+
+cat << 'EOF' > /lib/systemd/system/splash-client.service
+[Unit]
+Description=Update Plymouth Boot Screen
+After=plymouth-start.service snapd.service snapd.socket
+ConditionKernelCommandLine=snapd_recovery_mode=run
+
+[Service]
+ExecStart=-/usr/bin/splash-client
+EOF
+
+mkdir -p /etc/plymouth
+cat << 'EOF' > /etc/plymouth/plymouthd.conf
+[Daemon]
+Theme=vendor
+ThemeDir=/run/mnt/gadget/splash/plymouth/themes
+ShowDelay=0
+DeviceTimeout=8
+EOF
+
+mkdir -p /usr/share/plymouth
+cat << 'EOF' > /usr/share/plymouth/plymouthd.defaults
+[Daemon]
+Theme=ubuntu-core
+ShowDelay=0
+DeviceTimeout=8
+EOF
+
+cat << 'EOF' > /lib/systemd/system/plymouth-show-run.service
+[Unit]
+Description=Display state on splash
+After=plymouth-start.service
+ConditionKernelCommandLine=snapd_recovery_mode=run
+ConditionPathExists=/run/plymouth/pid
+
+[Service]
+ExecStart=-/bin/plymouth display-message --text='Starting system...'
+Type=oneshot
+TimeoutSec=20
+
+[Install]
+WantedBy=sysinit.target
+EOF
+
+cat << 'EOF' > /lib/systemd/system/plymouth-show-install.service
+[Unit]
+Description=Display state on splash
+After=plymouth-start.service
+ConditionKernelCommandLine=snapd_recovery_mode=install
+ConditionPathExists=/run/plymouth/pid
+
+[Service]
+ExecStart=-/bin/plymouth display-message --text='Installing Ubuntu Core...'
+Type=oneshot
+TimeoutSec=20
+
+[Install]
+WantedBy=sysinit.target
+EOF
+
+cat << 'EOF' > /lib/systemd/system/plymouth-show-recover.service
+[Unit]
+Description=Display state on splash
+After=plymouth-start.service
+ConditionKernelCommandLine=snapd_recovery_mode=recover
+ConditionPathExists=/run/plymouth/pid
+
+[Service]
+ExecStart=-/bin/plymouth display-message --text='Starting recovery system...'
+Type=oneshot
+TimeoutSec=20
+
+[Install]
+WantedBy=sysinit.target
+EOF
+
+cat << 'EOF' > /lib/systemd/system/plymouth-show-factory-reset.service
+[Unit]
+Description=Display state on splash
+After=plymouth-start.service
+ConditionKernelCommandLine=snapd_recovery_mode=factory-reset
+ConditionPathExists=/run/plymouth/pid
+
+[Service]
+ExecStart=-/bin/plymouth display-message --text='Resetting to factory defaults...'
+Type=oneshot
+TimeoutSec=20
+
+[Install]
+WantedBy=sysinit.target
+EOF
+
+# We pull by "Requires" instead, so these units are not run unless plymouth-start is
+rm /lib/systemd/system/multi-user.target.wants/plymouth-quit-wait.service
+rm /lib/systemd/system/multi-user.target.wants/plymouth-quit.service
+rm /lib/systemd/system/sysinit.target.wants/plymouth-read-write.service
+
+# Set UC as the default plymouth theme
+ln -sf /usr/share/plymouth/themes/ubuntu-core/ubuntu-core.plymouth \
+   /usr/share/plymouth/themes/default.plymouth
