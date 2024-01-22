@@ -6,9 +6,8 @@ set -e
 # clouding the view towards the work of eventually shipping with empty /etc
 echo "Cleaning up unneeded files in /etc"
 
-# package manager related stuff
+# remove files installed by packages into apt
 rm -rvf /etc/apt
-rm -rvf /etc/dpkg
 
 # misc
 rm -rvf /etc/kernel
@@ -21,12 +20,6 @@ rm /etc/pam.conf
 
 # cloud-init adds stuff here
 rm -rvf /etc/profile.d/Z99-cloud*
-
-# remove cloud-init file which allows all datasources, eventually we should add
-# a cloud-init configuration which specifies all allowed/known to work/good 
-# datasources, but since snapd will do this automatically after seeding, it's 
-# not critical
-rm /etc/cloud/cloud.cfg.d/90_dpkg.cfg
 
 rm /etc/rmt
 
@@ -43,7 +36,7 @@ rm -rf /etc/python3
 # python3.6 imports apport
 rm -rf /etc/python3.6
 
-# only provides a symbolic name for "link-local"
+# cleanup networks
 rm /etc/networks
 
 # no need for old style init, we cannot delete /etc/init.d: apparmor needs it
@@ -54,9 +47,6 @@ rm -f /etc/alternatives/*.gz
 
 # python deb install leftovers
 rm -rf /usr/local/lib/python*
-
-# we have no cron daily jobs
-rmdir /etc/cron.daily
 
 # no permanet journal
 rm -rf /var/log/journal
@@ -73,8 +63,5 @@ rm -rf -- /var/local /usr/local
 # we need this for the core base snap when using with classic snaps
 # for the "interfaces-desktop-host-fonts"
 mkdir -p /usr/local/share/fonts
-
-# no debconf
-rm -rf /var/cache/debconf
 
 # FIXME: make /etc/lsb-release point to ../usr/lib/lsb-release

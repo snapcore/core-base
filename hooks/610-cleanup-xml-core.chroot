@@ -9,6 +9,4 @@ echo "I: Removing xml-core runnable bits"
 
 rm -r \
     usr/bin/dh_installxmlcatalogs \
-    usr/sbin/update-xmlcatalog \
-    usr/share/debhelper/autoscripts \
-    usr/share/perl5/Debian/Debhelper/Sequence/xml_core.pm
+    usr/sbin/update-xmlcatalog

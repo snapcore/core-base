@@ -1,5 +1,7 @@
 #!/bin/sh -ex
 
+set -ex
+
 mkdir -p /etc/writable/default
 
 # cloud-init needs to be able to modify hostname and has the ability to
@@ -18,4 +20,3 @@ for f in system user; do
     echo "I: creating /etc/systemd/$f.conf.d"
     mkdir -p /etc/systemd/$f.conf.d
 done
-
