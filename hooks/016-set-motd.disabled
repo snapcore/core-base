@@ -1,7 +1,7 @@
 #!/bin/bash -ex
 
 cat >/etc/motd<<EOF
-Welcome to Ubuntu Core 24
+Welcome to Ubuntu Core 26
 
 * Documentation: https://ubuntu.com/core/docs
 
