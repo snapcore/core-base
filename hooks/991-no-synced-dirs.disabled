@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -ex
+
+if grep -v '^#' </etc/system-image/writable-paths | grep synced; then
+    echo "Using 'synced' in /etc/system-image/writable-paths is not allowed in core26"
+    exit 1
+fi
