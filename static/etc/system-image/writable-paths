@@ -57,6 +57,7 @@
 # cloud-init
 /etc/cloud                              auto                    persistent  transition  none
 /var/lib/cloud                          auto                    persistent  none        none
+/var/lib/waagent                        auto                    persistent  transition  none
 # for various clouds like GCE
 /etc/sysctl.d                           auto                    persistent  transition  none
 # swapfile
